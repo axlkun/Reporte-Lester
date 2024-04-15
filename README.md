@@ -22,7 +22,7 @@ Módulo que genera un reporte y da opción a exportar a Excel, desarrollado en A
 - Restaura las dependencias NuGet.
 - Configura la cadena de conexión a la base de datos en el archivo `Web.config`.
 - Ejecuta IIS Express.
-- Accede a `https://localhost:44323/Home`
+- Accede a `https://localhost:44323/`
 
 
 ## Author
