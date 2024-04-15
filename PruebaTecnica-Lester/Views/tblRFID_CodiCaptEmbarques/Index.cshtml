@@ -1,0 +1,178 @@
+﻿@model IEnumerable<PruebaTecnica_Lester.Models.tblRFID_CodiCaptEmbarques>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Reporte</h2>
+
+
+<div>
+    <form method="get" action="@Url.Action("Index", "tblRFID_CodiCaptEmbarques")" class="row gx-6 gy-2 align-items-center">
+
+        <div class="col-auto">
+            <label for="startDate" class="form-label">Fecha de inicio:</label>
+            <input type="date" id="startDate" name="startDate" class="form-control">
+        </div>
+
+        <div class="col-auto">
+            <label for="endDate" class="form-label">Fecha de fin:</label>
+            <input type="date" id="endDate" name="endDate" class="form-control">
+        </div>
+
+        <div class="col-auto">
+            <div class="form-check form-check-inline">
+                <label class="form-check-label">
+                    Unitario
+                </label>
+                <input class="form-check-input" type="radio" name="reportType" value="Unitario" checked>
+            </div>
+
+            <div class="form-check form-check-inline">
+                <label class="form-check-label">
+                    Secuencia
+                </label>
+                <input class="form-check-input" type="radio" name="reportType" value="Secuencia">
+            </div>
+        </div>
+        
+
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Buscar</button>
+        </div>
+    </form>
+</div>
+
+    @if (ViewBag.StartDate != null && ViewBag.EndDate != null && ViewBag.ReportData != null)
+    {
+        <div class="alert alert-success mt-3" role="alert">
+            <p>Reporte @(ViewBag.ReportType) del periodo: @(((DateTime)ViewBag.StartDate).ToString("dd/MM/yyyy")) - @(((DateTime)ViewBag.EndDate).ToString("dd/MM/yyyy"))</p>
+        </div>
+    }
+    else if (ViewBag.StartDate != null && ViewBag.EndDate == null)
+    {
+        <div class="alert alert-success mt-3" role="alert">
+            <p>Reporte @(ViewBag.ReportType) del día: @(((DateTime)ViewBag.StartDate).ToString("dd/MM/yyyy")) </p>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-secondary mt-3" role="alert">
+            <p>No se ha ingresado un periodo</p>
+        </div>
+    }
+
+
+<div class="custom-height">
+
+
+    @if (ViewBag.ReportData != null)
+    {
+        <a class="btn btn-danger mb-3" href="/tblRFID_CodiCaptEmbarques">Limpiar</a>
+
+        if (ViewBag.ReportType == "Unitario")
+        {
+
+            using (Html.BeginForm("ExcelUnitario", "tblRFID_CodiCaptEmbarques", FormMethod.Post))
+            {
+                <button class="btn btn-success mb-3" type="submit">Exportar a Excel</button>
+                <input type="hidden" name="reportData" value="@Json.Encode(ViewBag.ReportData)" />
+            }
+
+            <table class="table table-striped">
+                <tr>
+                    <th>
+                        RFID
+                    </th>
+                    <th>
+                        Acrónimo
+                    </th>
+                    <th>
+                        Hora de lectura
+                    </th>
+
+                </tr>
+
+                @if (((IEnumerable<object>)ViewBag.ReportData).Any())
+                {
+
+                    foreach (var item in ViewBag.ReportData)
+                    {
+                        <tr>
+                            <td>
+
+                                @item.codebar
+                            </td>
+                            <td>
+
+                                @item.acronimo
+                            </td>
+                            <td>
+
+                                @item.fechaLectura
+                            </td>
+
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr> <td>No se encontraron elementos</td> </tr>
+                }
+
+            </table>
+        }
+
+        if (ViewBag.ReportType == "Secuencia")
+        {
+
+            using (Html.BeginForm("ExcelSecuencial", "tblRFID_CodiCaptEmbarques", FormMethod.Post))
+            {
+                <button class="btn btn-success mb-3" type="submit">Exportar a Excel</button>
+                <input type="hidden" name="reportData" value="@Json.Encode(ViewBag.ReportData)" />
+            }
+
+            <table class="table table-striped">
+                <tr>
+                    <th>
+                        Secuencia
+                    </th>
+                    <th>
+                        Acrónimo
+                    </th>
+                    <th>
+                        Cantidad
+                    </th>
+
+                </tr>
+                 
+                @if (((IEnumerable<object>)ViewBag.ReportData).Any())
+                {
+
+                    foreach (var item in ViewBag.ReportData)
+                    {
+                        <tr>
+                            <td>
+                                @item.Secuencia
+                            </td>
+                            <td>
+                                @item.Acronimo
+                            </td>
+                            <td>
+                                @item.Cantidad
+                            </td>
+
+                        </tr>
+                    }
+
+                }
+                else
+                {
+                    <tr> <td>No se encontraron elementos</td> </tr>
+                }
+
+            </table>
+        }
+    }
+
+</div>
