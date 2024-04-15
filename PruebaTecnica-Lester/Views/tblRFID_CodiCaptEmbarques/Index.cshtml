@@ -34,6 +34,13 @@
                 </label>
                 <input class="form-check-input" type="radio" name="reportType" value="Secuencia">
             </div>
+
+            <div class="form-check form-check-inline">
+                <label class="form-check-label">
+                    Piezas por Viaje
+                </label>
+                <input class="form-check-input" type="radio" name="reportType" value="PiezasViaje">
+            </div>
         </div>
         
 
@@ -145,7 +152,7 @@
                     </th>
 
                 </tr>
-                 
+
                 @if (((IEnumerable<object>)ViewBag.ReportData).Any())
                 {
 
@@ -158,6 +165,52 @@
                             <td>
                                 @item.Acronimo
                             </td>
+                            <td>
+                                @item.Cantidad
+                            </td>
+
+                        </tr>
+                    }
+
+                }
+                else
+                {
+                    <tr> <td>No se encontraron elementos</td> </tr>
+                }
+
+            </table>
+        }
+
+        if (ViewBag.ReportType == "PiezasViaje")
+        {
+
+            using (Html.BeginForm("ExcelPiezasViaje", "tblRFID_CodiCaptEmbarques", FormMethod.Post))
+            {
+                <button class="btn btn-success mb-3" type="submit">Exportar a Excel</button>
+                <input type="hidden" name="reportData" value="@Json.Encode(ViewBag.ReportData)" />
+            }
+
+            <table class="table table-striped">
+                <tr>
+                    <th>
+                        Viaje
+                    </th>
+                    <th>
+                        Piezas
+                    </th>
+
+                </tr>
+
+                @if (((IEnumerable<object>)ViewBag.ReportData).Any())
+                {
+
+                    foreach (var item in ViewBag.ReportData)
+                    {
+                        <tr>
+                            <td>
+                                @item.Secuencia
+                            </td>
+                       
                             <td>
                                 @item.Cantidad
                             </td>

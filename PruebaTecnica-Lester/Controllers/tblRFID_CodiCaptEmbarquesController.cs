@@ -1,4 +1,5 @@
 ﻿using OfficeOpenXml;
+using OfficeOpenXml.Style;
 using PruebaTecnica_Lester.Models;
 using System;
 using System.Collections.Generic;
@@ -27,18 +28,24 @@ namespace PruebaTecnica_Lester.Controllers
                 }
                 else
                 {
-                    if (reportType == "Unitario")
-                    {
-                        var data = ReporteUnitario(startDate, endDate);
-                        ViewBag.ReportData = data;
-                        return View();
-                    }
-                    else
-                    {
-                        var data = ReporteSecuencial(startDate, endDate);
-                        ViewBag.ReportData = data;
-                        return View();
-                    }
+                        if (reportType == "Unitario")
+                        {
+                            var data = ReporteUnitario(startDate, endDate);
+                            ViewBag.ReportData = data;
+                            return View();
+                        }
+                        else if(reportType == "Secuencia")
+                        {
+                            var data = ReporteSecuencial(startDate, endDate);
+                            ViewBag.ReportData = data;
+                            return View();
+                        }
+                        else
+                        {
+                            var data = ReportePiezasViaje(startDate, endDate);
+                            ViewBag.ReportData = data;
+                            return View();
+                        }
 
                 }
 
@@ -111,6 +118,48 @@ namespace PruebaTecnica_Lester.Controllers
             }
         }
 
+        private List<ReporteSecuencial> ReportePiezasViaje(DateTime? startDate, DateTime? endDate)
+        {
+            using (DbModels context = new DbModels())
+            {
+                if (startDate != null && endDate != null)
+                {
+                    endDate = endDate.Value.AddDays(1);
+
+                    var query = context.tblRFID_CodiCaptEmbarques
+                        .Where(x => x.fechaLectura >= startDate && x.fechaLectura <= endDate)
+                        .GroupBy(x => new { x.Viaje })
+                        .Select(g => new ReporteSecuencial
+                        {
+                            Secuencia = g.Key.Viaje,
+                            Cantidad = g.Count()
+                        })
+                        .OrderBy(x => x.Secuencia)
+                        .ToList();
+
+                    return query;
+                }
+                else
+                {
+                    endDate = startDate.Value.AddDays(1);
+
+                    var query = context.tblRFID_CodiCaptEmbarques
+                         .Where(x => x.fechaLectura >= startDate && x.fechaLectura <= endDate)
+                         .GroupBy(x => new { x.Viaje })
+                         .Select(g => new ReporteSecuencial
+                         {
+                             Secuencia = g.Key.Viaje,
+                             Cantidad = g.Count()
+                         })
+                         .OrderBy(x => x.Secuencia)
+                         .ToList();
+
+                    return query;
+                }
+
+            }
+        }
+
         public ActionResult ExcelUnitario(string reportData)
         {
             var serializer = new JavaScriptSerializer();
@@ -120,7 +169,16 @@ namespace PruebaTecnica_Lester.Controllers
 
             using (var package = new ExcelPackage())
             {
-                var worksheet = package.Workbook.Worksheets.Add("ReportData");
+                var worksheet = package.Workbook.Worksheets.Add("Reporte Unitario");
+
+                using (var range = worksheet.Cells["A1:C1"])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                    range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                }
 
                 worksheet.Cells["A1"].Value = "RFID";
                 worksheet.Cells["B1"].Value = "Acrónimo";
@@ -136,6 +194,8 @@ namespace PruebaTecnica_Lester.Controllers
                     worksheet.Cells["C" + row].Value = fechaLocal.ToString("dd/MM/yyyy hh:mm:ss tt"); // Convertir la fecha a cadena en el formato deseado
                     row++;
                 }
+
+                worksheet.Cells.AutoFitColumns();
 
                 fileContents = package.GetAsByteArray();
 
@@ -153,7 +213,17 @@ namespace PruebaTecnica_Lester.Controllers
 
             using (var package = new ExcelPackage())
             {
-                var worksheet = package.Workbook.Worksheets.Add("ReportData");
+                var worksheet = package.Workbook.Worksheets.Add("Reporte Secuencia");
+
+                // Establece el estilo para el encabezado
+                using (var range = worksheet.Cells["A1:C1"])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                    range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                }
 
                 worksheet.Cells["A1"].Value = "Secuencia";
                 worksheet.Cells["B1"].Value = "Acrónimo";
@@ -168,11 +238,54 @@ namespace PruebaTecnica_Lester.Controllers
                     row++;
                 }
 
+                worksheet.Cells.AutoFitColumns();
+
                 fileContents = package.GetAsByteArray();
 
             }
 
             return File(fileContents, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ReporteSecuencial.xlsx");
+        }
+
+        public ActionResult ExcelPiezasViaje(string reportData)
+        {
+            var serializer = new JavaScriptSerializer();
+            List<ReporteSecuencial> data = serializer.Deserialize<List<ReporteSecuencial>>(reportData);
+
+            byte[] fileContents;
+
+            using (var package = new ExcelPackage())
+            {
+                var worksheet = package.Workbook.Worksheets.Add("Piezas por Viaje");
+
+                // Establece el estilo para el encabezado
+                using (var range = worksheet.Cells["A1:B1"])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                    range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                }
+
+                worksheet.Cells["A1"].Value = "Viaje";
+                worksheet.Cells["B1"].Value = "Piezas";
+
+                int row = 2;
+                foreach (var item in data)
+                {
+                    worksheet.Cells["A" + row].Value = item.Secuencia;
+                    worksheet.Cells["B" + row].Value = item.Cantidad;
+                    row++;
+                }
+
+                worksheet.Cells.AutoFitColumns();
+
+                fileContents = package.GetAsByteArray();
+
+            }
+
+            return File(fileContents, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ReportePiezasViaje.xlsx");
         }
 
     }
