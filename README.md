@@ -8,7 +8,9 @@ Módulo que genera un reporte y da opción a exportar a Excel, desarrollado en A
 ## Características
 
 - Reporte entre rango de fechas o un solo dia
-- Reporte a nivel unitario o de secuencia
+- Reporte a nivel unitario
+- Reporte secuencia
+- Reporte de piezas por viaje
 - Exportar reporte a Excel
 
 
